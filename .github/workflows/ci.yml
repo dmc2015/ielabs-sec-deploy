@@ -1,0 +1,47 @@
+name: Security gates
+
+on:
+  workflow_call:
+
+jobs:
+  brakeman:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - run: bundle exec brakeman --no-pager --exit-on-warn --exit-on-error
+
+  bundler-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - run: bundle exec bundler-audit check --update
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f ielabs-sec-deploy/Dockerfile -t ielabs:test .
+      - uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ielabs:test
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
