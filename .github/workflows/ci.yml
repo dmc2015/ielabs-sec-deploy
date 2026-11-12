@@ -48,6 +48,7 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 1
+          skip-dirs: "/usr/local/bundle/ruby/*/gems"
 
   build-sign-publish:
     needs: [brakeman, bundler-audit, gitleaks, trivy]
