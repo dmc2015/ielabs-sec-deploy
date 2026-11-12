@@ -48,7 +48,14 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 1
+          # Skip Trivy's secret/filesystem scan under installed gems. These are
+          # third-party gem internals (test fixtures like capybara's key.pem) —
+          # not our secrets. Gem CVE detection is handled separately by bundler-audit.
           skip-dirs: "/usr/local/bundle/ruby/*/gems"
+          # Scan only the OS layer. Ruby gems are covered by bundler-audit.
+          # Known gap: npm package CVEs (package.json) — covered separately by
+          # Dependabot. Revisit when consolidating scanners.
+          vuln-type: "os"
 
   build-sign-publish:
     needs: [brakeman, bundler-audit, gitleaks, trivy]
